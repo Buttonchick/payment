@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Страница Платежей</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
+</head>
+<body>
+    <div style="display: flex; padding-left: 12px;">
+        <div style = "width: 50%;">
+            <h3>Выбор</h3>
+            <p>Курс:
+            <select class="easyui-combobox" id="course-dropdown">
+                <option value="SQl">SQl</option>
+                <option value="API">API</option>
+                <option value="python">python</option>
+                <option value="N4">N4</option>
+            </select>
+            </p>
+            <p>Поток:
+            <select class="easyui-combobox" id="stream-dropdown">
+                <option value="stream_1">Поток 1</option>
+                <option value="stream_2">Поток 2</option>
+                <option value="stream_3">Поток 3</option>
+                <option value="stream_4">Поток 4</option>
+            </select>
+            </p>
+            <p>Тариф:
+            <select class="easyui-combobox" id="Instance-dropdown">
+                <option value="Instance_1">Тариф 1</option>
+                <option value="Instance_2">Тариф 2</option>
+                <option value="Instance_3">Тариф 3</option>
+                <option value="Instance_4">Тариф 4</option>
+            </select>
+            </p>
+        </div>
+        <div >
+            <h3>Сумма</h3>
+            <div id="totals">
+                <p><span id="rub-total">0</span> RUB</p>
+                <p><span id="usd-total">0</span> USD</p>
+                <p><span id="eur-total">0</span> EUR</p>
+                <p><span id="ils-total">0</span> ILS</p>
+            </div>
+            <div style="display: flex;">
+                <p>Всего: </p>
+                <div id="total-amount"></div>
+                <select class="easyui-combobox" id="currency-dropdown">
+                    <option value="RUB">RUB</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="ILS">ILS</option>
+                </select>
+                
+
+            </div>
+            
+        </div>
+    </div>
+    <h3>Платежи</h3>
+    <table id="payments" class="table easyui-datagrid" style="width:100%;height:400px">
+        <thead>
+            <tr>
+                <th field="course">Курс</th>
+                <th field="time">Время</th>
+                <th field="payed">Оплачено</th>
+                <th field="amount">Сумма оплаты</th>
+                <th field="currency">Валюта оплаты</th>
+            </tr>
+        </thead>
+    </table>
+
+    <script>
+        $(document).ready(function() {
+            $.ajax({
+                url: '/api/payments/',
+                type: 'GET',
+                success: function(data) {
+                    var html = '';
+                    var rubTotal = 0.0;
+                    var usdTotal = 0.0;
+                    var eurTotal = 0.0;
+                    var ilsTotal = 0.0;
+
+                    for (var i = 0; i < data.length; i++) {
+                        html += '<tr><td>' + data[i].course + '</td><td>' + new Date(data[i].timestamp).toLocaleString() + '</td><td>' + (data[i].payed ? 'Да' : 'Нет') + '</td><td>' + data[i].payed_amount + '</td><td>' + data[i].payed_currency + '</td></tr>';
+
+                        if (data[i].payed_currency === 'RUB') {
+                            rubTotal += parseFloat(data[i].payed_amount);
+                        } else if (data[i].payed_currency === 'USD') {
+                            usdTotal += parseFloat(data[i].payed_amount);
+                        } else if (data[i].payed_currency === 'EUR') {
+                            eurTotal += parseFloat(data[i].payed_amount);
+                        } else if (data[i].payed_currency === 'ILS') {
+                            ilsTotal += parseFloat(data[i].payed_amount);
+                        }
+                    }
+
+                    $('#payments tbody').html(html);
+                    $('#rub-total').text(rubTotal.toFixed(2));
+                    $('#usd-total').text(usdTotal.toFixed(2));
+                    $('#eur-total').text(eurTotal.toFixed(2));
+                    $('#ils-total').text(ilsTotal.toFixed(2));
+                },
+                error: function(error) {
+                    console.log(error);
+                }
+            });
+
+            // Функция для получения суммы платежей в выбранной валюте
+            function getTotalAmount(currency) {
+                $.ajax({
+                    url: '/api/total-amount/',
+                    data: {
+                        'currency': currency
+                    },
+                    success: function(data) {
+                        $('#total-amount').text(' ' + data.total_amount);
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+            }
+
+            // Обработчик события изменения выбранного значения в dropdown
+            $('#currency-dropdown').change(function() {
+                var selectedCurrency = $(this).val();
+                getTotalAmount(selectedCurrency);
+            });
+
+            // Получаем начальную сумму для первой валюты в dropdown
+            getTotalAmount($('#currency-dropdown').val());
+        });
+    </script>
+</body>
+</html>
