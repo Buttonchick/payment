@@ -14,23 +14,24 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
+
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
-from .views import CourseViewSet, CourseStreamViewSet, CourseInstanceViewSet, PaymentViewSet, FilteredPaymentViewSet,payments_view,get_total_amount
-from .api import PaymentViewSet
+from .views import CourseViewSet, CourseStreamViewSet, CourseInstanceViewSet,PaymentViewSet, payments_view, get_filtered_payments
 
 router = routers.DefaultRouter()
 router.register(r'courses', CourseViewSet)
 router.register(r'coursestreams', CourseStreamViewSet)
 router.register(r'courseinstances', CourseInstanceViewSet)
-router.register(r'payments', PaymentViewSet)
-router.register(r'filteredpayments', FilteredPaymentViewSet)
-
+router.register(r'payments', PaymentViewSet)  # Используйте PaymentViewSet здесь
 
 urlpatterns = [
     path('payments/', payments_view, name="payments"),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('api/total-amount/', get_total_amount, name='total-amount'),
+    path('api/get_filtered_payments/', get_filtered_payments, name='get_filtered_payments'),
+  
+ 
 ]

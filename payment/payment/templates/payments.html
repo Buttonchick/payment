@@ -4,119 +4,77 @@
     <title>Страница Платежей</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
 </head>
 <body>
     <div style="display: flex; padding-left: 12px;">
-        <div style = "width: 50%;">
+        <div style="width: 50%;">
             <h3>Выбор</h3>
             <p>Курс:
-            <select class="easyui-combobox" id="course-dropdown">
-                <option value="SQl">SQl</option>
-                <option value="API">API</option>
-                <option value="python">python</option>
-                <option value="N4">N4</option>
+            <select id="course-dropdown">
+                <option value="">Выберите курс</option>
+                {% for course in courses %}
+                    {% if course.visibility == 2 %}
+                        <option value="{{ course.name }}">{{ course.name }}</option>
+                    {% endif %}
+                {% endfor %}
             </select>
             </p>
             <p>Поток:
-            <select class="easyui-combobox" id="stream-dropdown">
-                <option value="stream_1">Поток 1</option>
-                <option value="stream_2">Поток 2</option>
-                <option value="stream_3">Поток 3</option>
-                <option value="stream_4">Поток 4</option>
+            <select id="stream-dropdown" disabled>
+                <option value="">Выберите поток</option>
             </select>
             </p>
             <p>Тариф:
-            <select class="easyui-combobox" id="Instance-dropdown">
-                <option value="Instance_1">Тариф 1</option>
-                <option value="Instance_2">Тариф 2</option>
-                <option value="Instance_3">Тариф 3</option>
-                <option value="Instance_4">Тариф 4</option>
+            <select id="Instance-dropdown" disabled>
+                <option value="">Выберите тариф</option>
             </select>
             </p>
         </div>
-        <div >
-            <h3>Сумма</h3>
-            <div id="totals">
-                <p><span id="rub-total">0</span> RUB</p>
-                <p><span id="usd-total">0</span> USD</p>
-                <p><span id="eur-total">0</span> EUR</p>
-                <p><span id="ils-total">0</span> ILS</p>
-            </div>
-            <div style="display: flex;">
-                <p>Всего: </p>
-                <div id="total-amount"></div>
-                <select class="easyui-combobox" id="currency-dropdown">
-                    <option value="RUB">RUB</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="ILS">ILS</option>
-                </select>
-                
-
-            </div>
-            
-        </div>
     </div>
+    <div id="totals">
+        <p>Сумма рублевых переводов: <span id="rub-total">0</span></p>
+        <p>Сумма долларовых переводов: <span id="usd-total">0</span></p>
+        <p>Сумма евровых переводов: <span id="eur-total">0</span></p>
+        <p>Сумма переводов в шекелях: <span id="ils-total">0</span></p>
+    </div>
+
+    <select id="currency-dropdown">
+        <option value="RUB">RUB</option>
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+        <option value="ILS">ILS</option>
+    </select>
+
+    <div id="total-amount"></div>
+    <button id="refresh-btn">Обновить</button>
     <h3>Платежи</h3>
-    <table id="payments" class="table easyui-datagrid" style="width:100%;height:400px">
+    <table id="payments" class="table" style="width:100%;height:400px">
         <thead>
             <tr>
-                <th field="course">Курс</th>
-                <th field="time">Время</th>
-                <th field="payed">Оплачено</th>
-                <th field="amount">Сумма оплаты</th>
-                <th field="currency">Валюта оплаты</th>
+                <th>Курс</th>
+                <th>Время</th>
+                <th>Оплачено</th>
+                <th>Сумма оплаты (USD)</th>
             </tr>
         </thead>
+        <tbody>
+        </tbody>
     </table>
 
     <script>
         $(document).ready(function() {
-            $.ajax({
-                url: '/api/payments/',
-                type: 'GET',
-                success: function(data) {
-                    var html = '';
-                    var rubTotal = 0.0;
-                    var usdTotal = 0.0;
-                    var eurTotal = 0.0;
-                    var ilsTotal = 0.0;
-
-                    for (var i = 0; i < data.length; i++) {
-                        html += '<tr><td>' + data[i].course + '</td><td>' + new Date(data[i].timestamp).toLocaleString() + '</td><td>' + (data[i].payed ? 'Да' : 'Нет') + '</td><td>' + data[i].payed_amount + '</td><td>' + data[i].payed_currency + '</td></tr>';
-
-                        if (data[i].payed_currency === 'RUB') {
-                            rubTotal += parseFloat(data[i].payed_amount);
-                        } else if (data[i].payed_currency === 'USD') {
-                            usdTotal += parseFloat(data[i].payed_amount);
-                        } else if (data[i].payed_currency === 'EUR') {
-                            eurTotal += parseFloat(data[i].payed_amount);
-                        } else if (data[i].payed_currency === 'ILS') {
-                            ilsTotal += parseFloat(data[i].payed_amount);
-                        }
-                    }
-
-                    $('#payments tbody').html(html);
-                    $('#rub-total').text(rubTotal.toFixed(2));
-                    $('#usd-total').text(usdTotal.toFixed(2));
-                    $('#eur-total').text(eurTotal.toFixed(2));
-                    $('#ils-total').text(ilsTotal.toFixed(2));
-                },
-                error: function(error) {
-                    console.log(error);
-                }
-            });
-
-            // Функция для получения суммы платежей в выбранной валюте
-            function getTotalAmount(currency) {
+            // Функция для загрузки данных о курсах
+            function loadCourses() {
                 $.ajax({
-                    url: '/api/total-amount/',
-                    data: {
-                        'currency': currency
-                    },
+                    url: '/api/courses/',
+                    type: 'GET',
                     success: function(data) {
-                        $('#total-amount').text(' ' + data.total_amount);
+                        var courseDropdown = $('#course-dropdown');
+                        $.each(data, function(index, course) {
+                            if (course.visibility === 2) {
+                                courseDropdown.append('<option value="' + course.name + '"  id="' + course.id + '">' + course.name + '</option>');
+                            }
+                        });
                     },
                     error: function(error) {
                         console.log(error);
@@ -124,15 +82,107 @@
                 });
             }
 
-            // Обработчик события изменения выбранного значения в dropdown
-            $('#currency-dropdown').change(function() {
-                var selectedCurrency = $(this).val();
-                getTotalAmount(selectedCurrency);
+            // Загрузка курсов при загрузке страницы
+            loadCourses();
+
+            // Функция для обновления списка потоков при выборе курса
+            $('#course-dropdown').change(function() {
+                var selectedCourse = $(this).val();
+                var selectedCourseId = $(this).children('option:selected').attr('id'); // Получаем идентификатор курса
+                $('#stream-dropdown').prop('disabled', true).empty();
+                $('#Instance-dropdown').prop('disabled', true).empty();
+
+                if (selectedCourse) {
+                    $.ajax({
+                        url: '/api/coursestreams/?course=' + selectedCourse,
+                        type: 'GET',
+                        success: function(data) {
+                            var streamDropdown = $('#stream-dropdown');
+                            streamDropdown.prop('disabled', false);
+                            $.each(data, function(index, stream) {
+                                if(stream.course == selectedCourseId ){
+                                    streamDropdown.append('<option value="' + stream.name + '" id="' + stream.id + '">' + stream.name+'</option>');
+                                }
+                                
+                            });
+                        },
+                        error: function(error) {
+                            console.log(error);
+                        }
+                    });
+                }
             });
 
-            // Получаем начальную сумму для первой валюты в dropdown
-            getTotalAmount($('#currency-dropdown').val());
+            // Функция для обновления списка тарифов при выборе потока
+            $('#stream-dropdown').change(function() {
+                var selectedCourse = $('#course-dropdown').val();
+                var selectedStream = $(this).val();
+                var selectedStreamId = $(this).children('option:selected').attr('id'); // Получаем идентификатор курса
+                $('#Instance-dropdown').prop('disabled', true).empty();
+
+                if (selectedStream) {
+                    $.ajax({
+                        url: '/api/courseinstances/?course=' + selectedCourse + '&stream=' + selectedStream,
+                        type: 'GET',
+                        success: function(data) {
+                            var instanceDropdown = $('#Instance-dropdown');
+                            instanceDropdown.prop('disabled', false);
+                            $.each(data, function(index, instance) {
+                                if(instance.stream == selectedStreamId){
+                                    instanceDropdown.append('<option value="' + instance.name + '">' + instance.name + '</option>');
+
+                                }
+                                
+                            });
+                        },
+                        error: function(error) {
+                            console.log(error);
+                        }
+                    });
+                }
+            });
+
+            // Функция для загрузки платежей при выборе курса, потока или тарифа
+            function loadPayments() {
+                var selectedCourse = $('#course-dropdown').val();
+                var selectedStream = $('#stream-dropdown').val();
+                var selectedInstance = $('#Instance-dropdown').val();
+                var selectedCurrency = $('#currency-dropdown').val();
+
+                $.ajax({
+                    url: '/api/get_filtered_payments/?course=' + selectedCourse + '&stream=' + selectedStream + '&instance=' + selectedInstance + '&currency='+ selectedCurrency,
+                    type: 'GET',
+                    success: function(data) {
+                        $('#rub-total').text(data['rub_total']);
+                        $('#usd-total').text(data['usd_total']);
+                        $('#eur-total').text(data['eur_total']);
+                        $('#ils-total').text(data['ils_total']);
+                        $('#total-amount').text(data['total_amount']); 
+                        var paymentsTable = $('#payments tbody');
+                        paymentsTable.empty();
+                        $.each(data.data, function(index, payment) {
+                            paymentsTable.append('<tr><td>' + payment.course + '</td><td>' + payment.time + '</td><td>' + payment.payed + '</td><td>' + payment.amount + '</td></tr>');
+                        });
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+            }
+
+            // Обновляем платежи при изменении курса, потока, тарифа или валюты
+            $('#Instance-dropdown').change(loadPayments);
+            $('#currency-dropdown').change(loadPayments);
+
+            // Обновляем платежи при нажатии на кнопку "Обновить"
+            $('#refresh-btn').click(loadPayments);
         });
+
+
+
+
+
+        
     </script>
 </body>
 </html>
