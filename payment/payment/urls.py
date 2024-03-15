@@ -19,7 +19,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
-from .views import CourseViewSet, CourseStreamViewSet, CourseInstanceViewSet,PaymentViewSet, payments_view, get_filtered_payments
+from .views import CourseViewSet, CourseStreamViewSet, CourseInstanceViewSet,PaymentViewSet, payments_view
+from .utils import get_filtered_payments
 
 router = routers.DefaultRouter()
 router.register(r'courses', CourseViewSet)
