@@ -54,7 +54,7 @@ def get_filtered_payments(request):
     data_from = request.GET.get('data_from', '')
     data_to = request.GET.get('data_to', '')
 
-    # Получаем даты из строк
+
     if data_from:
         data_from = datetime.datetime.strptime(data_from, '%Y-%m-%d')
     if data_to:

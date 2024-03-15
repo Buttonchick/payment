@@ -148,7 +148,7 @@
                 var selectedDataFrom = $('#data-from').val();
                 var selectedDataTo = $('#data-to').val();
 
-                // Проверяем, что параметры не являются null или не определены, и формируем URL запроса соответственно
+                // формируем URL 
                 var url = '/api/get_filtered_payments/?';
                 if (selectedCourse) {
                     url += 'course=' + selectedCourse + '&';
