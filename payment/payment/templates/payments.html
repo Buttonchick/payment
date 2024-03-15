@@ -11,12 +11,7 @@
             <h3>Выбор</h3>
             <p>Курс:
             <select id="course-dropdown">
-                <option value="">Выберите курс</option>
-                {% for course in courses %}
-                    {% if course.visibility == 2 %}
-                        <option value="{{ course.name }}">{{ course.name }}</option>
-                    {% endif %}
-                {% endfor %}
+                <option value="">Выберите курс</option>    
             </select>
             </p>
             <p>Поток:
@@ -29,13 +24,15 @@
                 <option value="">Выберите тариф</option>
             </select>
             </p>
+            <p>Дата от:
+                <input type="date" id="date-from" name="date-from">
+                </p>
+                <p>Дата до:
+                <input type="date" id="date-to" name="date-to">
+                </p>
         </div>
     </div>
     <div id="totals">
-        <p>Сумма рублевых переводов: <span id="rub-total">0</span></p>
-        <p>Сумма долларовых переводов: <span id="usd-total">0</span></p>
-        <p>Сумма евровых переводов: <span id="eur-total">0</span></p>
-        <p>Сумма переводов в шекелях: <span id="ils-total">0</span></p>
     </div>
 
     <select id="currency-dropdown">
@@ -148,21 +145,67 @@
                 var selectedStream = $('#stream-dropdown').val();
                 var selectedInstance = $('#Instance-dropdown').val();
                 var selectedCurrency = $('#currency-dropdown').val();
+                var selectedDataFrom = $('#data-from').val();
+                var selectedDataTo = $('#data-to').val();
+
+                // Проверяем, что параметры не являются null или не определены, и формируем URL запроса соответственно
+                var url = '/api/get_filtered_payments/?';
+                if (selectedCourse) {
+                    url += 'course=' + selectedCourse + '&';
+                }
+                if (selectedStream) {
+                    url += 'stream=' + selectedStream + '&';
+                }
+                if (selectedInstance) {
+                    url += 'instance=' + selectedInstance + '&';
+                }
+                if (selectedDataFrom) {
+                    url += 'data_from=' + selectedDataFrom+ '&';
+                }
+                if (selectedDataTo) {
+                    url += 'data_to=' + selectedDataTo+ '&';
+                }
 
                 $.ajax({
-                    url: '/api/get_filtered_payments/?course=' + selectedCourse + '&stream=' + selectedStream + '&instance=' + selectedInstance + '&currency='+ selectedCurrency,
+                    url: url,
                     type: 'GET',
                     success: function(data) {
+
                         $('#rub-total').text(data['rub_total']);
                         $('#usd-total').text(data['usd_total']);
                         $('#eur-total').text(data['eur_total']);
                         $('#ils-total').text(data['ils_total']);
-                        $('#total-amount').text(data['total_amount']); 
                         var paymentsTable = $('#payments tbody');
                         paymentsTable.empty();
                         $.each(data.data, function(index, payment) {
                             paymentsTable.append('<tr><td>' + payment.course + '</td><td>' + payment.time + '</td><td>' + payment.payed + '</td><td>' + payment.amount + '</td></tr>');
                         });
+                        var totals = $('#totals');
+                        totals.empty();
+
+                        var currency_dropdown = $('#currency-dropdown')
+                        currency_dropdown.empty();
+
+                        $.each(data.amounts, function(index, amount) {
+                       
+                            totals.append('<p>' + index+ ': <span id="' + amount+ '-total">' + amount + '</span></p>');
+                            currency_dropdown.append('<option value="'+index+'">'+index+'</option>')
+                           
+                        });
+
+                        var total_amount = $('#total-amount');
+                        total_amount.empty();
+                        $.each(data.total_amounts, function(index, amount) {
+
+                                total_amount.append('<span id="' + index + '" style="display: none;">' + ' ' + amount + ' ' + '</span>');
+                            
+                        
+                        });
+
+                        
+
+                      
+
                     },
                     error: function(error) {
                         console.log(error);
@@ -170,11 +213,21 @@
                 });
             }
 
-            // Обновляем платежи при изменении курса, потока, тарифа или валюты
-            $('#Instance-dropdown').change(loadPayments);
-            $('#currency-dropdown').change(loadPayments);
+            function total_amount(){
+                var total_amount_elements = Array.from(document.querySelectorAll('#total-amount span'));
+                var selectedCurrency = $('#currency-dropdown').val();
+                total_amount_elements.forEach(element => {
+                    if (element.id === selectedCurrency){
+                        element.style.display = 'block';
+                    } else {
+                        element.style.display = 'none';
+                    }
+                });
+            }
+
 
             // Обновляем платежи при нажатии на кнопку "Обновить"
+            $('#currency-dropdown').change(total_amount);
             $('#refresh-btn').click(loadPayments);
         });
 

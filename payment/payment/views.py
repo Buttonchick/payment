@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from forex_python.converter import CurrencyRates
 from decimal import Decimal
 from django.db.models import Sum
+import datetime
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -50,16 +51,33 @@ def get_filtered_payments(request):
     stream_name = request.GET.get('stream', '')
     instance_name = request.GET.get('instance', '')
     currency = request.GET.get('currency', 'RUB')
+    data_from = request.GET.get('data_from', '')
+    data_to = request.GET.get('data_to', '')
+
+    # Получаем даты из строк
+    if data_from:
+        data_from = datetime.datetime.strptime(data_from, '%Y-%m-%d')
+    if data_to:
+        data_to = datetime.datetime.strptime(data_to, '%Y-%m-%d')
+
+
 
     # Получаем объекты курса, потока и тарифа по их именам
+   
     course = Course.objects.filter(name=course_name).first()
+
     stream = CourseStream.objects.filter(name=stream_name, course=course).first()
+
     instance = CourseInstance.objects.filter(name=instance_name, stream=stream).first()
 
-    if not instance:
-        return JsonResponse({'error': 'Тариф не найден'}, status=404)
 
+    # Фильтруем платежи по дате
     filtered_payments = Payment.objects.filter(course=instance, payed=True)
+    if data_from:
+        filtered_payments = filtered_payments.filter(timestamp__gte=data_from)
+    if data_to:
+        filtered_payments = filtered_payments.filter(timestamp__lte=data_to)
+   
 
     data = []
     for payment in filtered_payments:
@@ -73,25 +91,34 @@ def get_filtered_payments(request):
         })
 
     filtered_payments_values = filtered_payments.values('payed_currency', 'payed_amount')
+    amounts ={}
+    total_amounts ={}
 
-    rub_total = sum(payment['payed_amount'] for payment in filtered_payments_values.filter(payed_currency='RUB'))
-    usd_total = sum(payment['payed_amount'] for payment in filtered_payments_values.filter(payed_currency='USD'))
-    eur_total = sum(payment['payed_amount'] for payment in filtered_payments_values.filter(payed_currency='EUR'))
-    ils_total = sum(payment['payed_amount'] for payment in filtered_payments_values.filter(payed_currency='ILS'))
-
-    total_amount = 0
+    total_amount_rub = 0
     for payment in filtered_payments_values:
-        converted_amount = convert_price(payment['payed_amount'], payment['payed_currency'], currency)
-        total_amount += converted_amount
+        if payment['payed_currency'] not in amounts:
+            amounts[payment['payed_currency']] = 0
+        amounts[payment['payed_currency']] += payment['payed_amount']
+        converted_amount_rub = convert_price(payment['payed_amount'], payment['payed_currency'], "RUB")
+        total_amount_rub += converted_amount_rub
+
+    for currency in amounts.keys():
+        total_amounts[currency] = convert_price(total_amount_rub, "RUB", currency)
+
+        
 
     return JsonResponse({
         'data': data,
-        'rub_total': rub_total,
-        'usd_total': usd_total,
-        'eur_total': eur_total,
-        'ils_total': ils_total,
-        'total_amount': total_amount
+        'amounts': amounts,
+        'total_amounts': total_amounts,
     }, safe=False)
+
+
+
+
+
+
+
 
 
 
