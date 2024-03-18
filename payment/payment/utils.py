@@ -3,6 +3,7 @@ from .models import Course, CourseStream, CourseInstance, Payment
 from django.http import JsonResponse
 from decimal import Decimal
 import datetime
+from dateutil import parser
 
 
 
@@ -15,9 +16,9 @@ def get_request_params(request):
     data_to = request.GET.get('data_to', '')
 
     if data_from:
-        data_from = datetime.datetime.strptime(data_from, '%Y-%m-%d')
+        data_from = datetime.datetime.strptime(data_from, '%m/%d/%Y %I:%M %p')
     if data_to:
-        data_to = datetime.datetime.strptime(data_to, '%Y-%m-%d')
+        data_to = datetime.datetime.strptime(data_to, '%m/%d/%Y %I:%M %p')
 
     return course_name, stream_name, instance_name, currency, data_from, data_to
 
@@ -28,13 +29,15 @@ def get_course_objects(course_name, stream_name, instance_name):
     instance = CourseInstance.objects.filter(name=instance_name, stream=stream).first()
     return course, stream, instance
 
-def filter_payments(instance, data_from, data_to):
-    filtered_payments = Payment.objects.filter(course=instance, payed=True)
-    if data_from:
-        filtered_payments = filtered_payments.filter(timestamp__gte=data_from)
-    if data_to:
-        filtered_payments = filtered_payments.filter(timestamp__lte=data_to)
+def filter_payments(instance, data_from, data_to): 
+    filtered_payments = Payment.objects.filter(course=instance, payed=True) 
+    if data_from: 
+        filtered_payments = filtered_payments.filter(timestamp__gte=data_from) 
+    if data_to: 
+        filtered_payments = filtered_payments.filter(timestamp__lte=data_to) 
     return filtered_payments
+
+
 
 def calculate_total_amounts(filtered_payments_values):
     amounts = {}
