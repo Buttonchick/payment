@@ -10,63 +10,74 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
 </head>
 <body>
-    <div style="display: flex; padding-left: 12px;">
-        <div style="width: 50%;">
-            <h3>Выбор</h3>
-            <p>Курс:
-            <select id="course-dropdown">
-                <option value="">Выберите курс</option>    
-            </select>
-            </p>
-            <p>Поток:
-            <select id="stream-dropdown" disabled>
-                <option value="">Выберите поток</option>
-            </select>
-            </p>
-            <p>Тариф:
-            <select id="Instance-dropdown" disabled>
-                <option value="">Выберите тариф</option>
-            </select>
-            <div style="position: relative;">
-                <input type="text" id="date-from" name="date-from" class="datetimepicker">
+    <div class="easyui-layout" style="width:100%;height:800px;">
+        <div data-options="region:'north', split:true" style="height:50%">
+            <div class="container">
+                <div class="row" style="padding-left: 12px;">
+                    <div class="col-md-6">
+                        <p>Курс:
+                            <select id="course-dropdown" class="form-select">
+                                <option value="">Выберите курс</option>    
+                            </select>
+                        </p>
+                        <p>Поток:
+                            <select id="stream-dropdown" class="form-select" disabled>
+                                <option value="">Выберите поток</option>
+                            </select>
+                        </p>
+                        <p>Тариф:
+                            <select id="Instance-dropdown" class="form-select" disabled>
+                                <option value="">Выберите тариф</option>
+                            </select>
+                        </p>
+                        <div style="position: relative; display: flex; width: fit-content;">
+                            <p style="padding-right: 10px;">Платежи: </p>
+                            <input type="text" id="date-from" name="date-from" class="form-control" style="border-radius: 5px; margin-right: 5px;">
+                            <input type="text" id="date-to" name="date-to" class="form-control" style="border-radius: 5px;">
+                        </div>
+                        <button id="refresh-btn" class="btn btn-primary">Обновить</button>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="totals">
+                            <p>RUB:<span>0</span></p>
+                            <p>USD:<span>0</span></p>
+                            <p>EUR:<span>0</span></p>
+                            <p>ILS:<span>0</span></p>
+                        </div>
+                        <div style="display: flex;">
+                            <select id="currency-dropdown" class="form-select" style="margin-right: 10px;">
+                                <option value="RUB">RUB</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="ILS">ILS</option>
+                            </select>
+                            <div id="total-amount" class="form-control">0</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <div style="position: relative;">
-                <input type="text" id="date-to" name="date-to" class="datetimepicker">
-            </div>
-            
+        </div>
+        <div data-options="region:'center'" style="height:50%">
+            <table id="payments" class="table" style="width:100%;height:100%">
+                <thead>
+                    <tr>
+                        <th>Месяц</th>
+                        <th>Курс</th>
+                        <th>Сумма оплаты (USD)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
         </div>
     </div>
-    <div id="totals">
-    </div>
-
-    <select id="currency-dropdown">
-        <option value="RUB">RUB</option>
-        <option value="USD">USD</option>
-        <option value="EUR">EUR</option>
-        <option value="ILS">ILS</option>
-    </select>
-
-    <div id="total-amount"></div>
-    <button id="refresh-btn">Обновить</button>
-    <h3>Платежи</h3>
-    <table id="payments" class="table" style="width:100%;height:400px">
-        <thead>
-            <tr>
-                <th>Курс</th>
-                <th>Время</th>
-                <th>Оплачено</th>
-                <th>Сумма оплаты (USD)</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
+    
 
     <script>
         $(document).ready(function() {
 
-            $('#date-from, #date-to').datetimepicker({  
+            $('#date-from, #date-to').datetimepicker({
+                locale: 'ru' 
             });
             // Функция для загрузки данных о курсах
             function loadCourses() {
@@ -185,6 +196,7 @@
                         $('#ils-total').text(data['ils_total']);
                         var paymentsTable = $('#payments tbody');
                         paymentsTable.empty();
+
                         $.each(data.data, function(index, payment) {
                             paymentsTable.append('<tr><td>' + payment.course + '</td><td>' + payment.time + '</td><td>' + payment.payed + '</td><td>' + payment.amount + '</td></tr>');
                         });
@@ -234,9 +246,56 @@
             }
 
 
+
+
+
+            function fillTableWithData(data) {
+                var tableBody = document.querySelector('#payments tbody');
+                tableBody.innerHTML = ''; // Очистим таблицу перед заполнением новыми данными
+                
+                for (var month in data) {
+                    if (data.hasOwnProperty(month)) {
+                        if (Object.keys(data[month].courses).length === 0) {
+                            // Если ключей нет, добавляем пустой курс
+                            data[month].courses['-'] = 0;
+                        }
+                        for (var course in data[month].courses) {
+                            if (data[month].courses.hasOwnProperty(course)) {
+                                var row = document.createElement('tr');
+                                var monthCell = document.createElement('td');
+                                var courseCell = document.createElement('td');
+                                var amountCell = document.createElement('td');
+                                
+                                monthCell.textContent = data[month].month;
+                                courseCell.textContent = course;
+                                amountCell.textContent = data[month].courses[course];
+                                
+                                row.appendChild(monthCell);
+                                row.appendChild(courseCell);
+                                row.appendChild(amountCell);
+                                
+                                tableBody.appendChild(row);
+                            } 
+                        }
+                    }
+                }
+            }
+
+            function fetchDataAndFillTable() {
+                // Выполняем запрос к API
+                fetch('/api/fill_data/')
+                    .then(response => response.json())
+                    .then(data => {
+                        fillTableWithData(data);
+                    })
+                    .catch(error => console.error('Ошибка при получении данных:', error));
+            }
+
+
             // Обновляем платежи при нажатии на кнопку "Обновить"
             $('#currency-dropdown').change(total_amount);
             $('#refresh-btn').click(loadPayments);
+            fetchDataAndFillTable();
         });
 
 

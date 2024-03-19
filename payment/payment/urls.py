@@ -20,7 +20,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 from .views import CourseViewSet, CourseStreamViewSet, CourseInstanceViewSet,PaymentViewSet, payments_view
-from .utils import get_filtered_payments
+from .utils import get_filtered_payments,fill_data
 
 router = routers.DefaultRouter()
 router.register(r'courses', CourseViewSet)
@@ -33,6 +33,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/get_filtered_payments/', get_filtered_payments, name='get_filtered_payments'),
+    path('api/fill_data/', fill_data, name='fill_data'),
   
  
 ]

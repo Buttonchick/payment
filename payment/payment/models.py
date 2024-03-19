@@ -28,7 +28,7 @@ class CourseInstance(models.Model):   # Тариф
 class Payment(models.Model):
     # Тариф
     course = models.ForeignKey(CourseInstance, on_delete=models.SET_NULL, null=True)
-    timestamp = models.DateTimeField(auto_now=True)
+    timestamp = models.DateTimeField() #auto_now=True
 
 		# нужно брать только платежи с payed = True
     payed = models.BooleanField(default=False)

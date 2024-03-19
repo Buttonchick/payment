@@ -67,7 +67,7 @@ def get_filtered_payments(request):
     for payment in filtered_payments:
         converted_amount = convert_price(payment.payed_amount, payment.payed_currency, "USD")
         data.append({
-            'course': payment.course.name,
+            'course': payment.course.stream.course.name,
             'time': payment.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
             'payed': 'Да' if payment.payed else 'Нет',
             'amount': converted_amount,
@@ -104,3 +104,35 @@ def convert_price(amount, from_currency, to_currency):
 
 
     return 0
+
+def fill_data(request):
+    filtered_payments = Payment.objects.filter(payed=True) 
+
+    # Получаем числа в формате "годМесяц" для всех дат
+    formatted_dates = [12 * date.timestamp.year + date.timestamp.month for date in filtered_payments]
+
+    # Находим месяц с наибольшим и наименьшим числом
+    max_month = max(formatted_dates)
+    min_month = min(formatted_dates)
+
+    # Создаем словарь с ключами в виде месяцев и пустыми значениями
+    data = {}
+
+    for month in range(min_month, max_month + 1):
+        if month not in data:
+            data[month] = {
+                'month': datetime.datetime(year=month // 12, month=month % 12 + 1, day=1),
+                'courses': {}
+            }
+            
+    for payment in filtered_payments:
+        month = 12 * payment.timestamp.year + payment.timestamp.month
+        course_name = payment.course.stream.course.name
+        amount_usd = convert_price(payment.payed_amount, payment.payed_currency, "USD")
+
+        if course_name not in data[month]['courses']:
+            data[month]['courses'][course_name] = 0
+
+        data[month]['courses'][course_name] += amount_usd
+    
+    return JsonResponse(data)
