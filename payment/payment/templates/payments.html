@@ -79,7 +79,7 @@
             $('#date-from, #date-to').datetimepicker({
                 locale: 'ru' 
             });
-            // Функция для загрузки данных о курсах
+
             function loadCourses() {
                 $.ajax({
                     url: '/api/courses/',
@@ -98,13 +98,12 @@
                 });
             }
 
-            // Загрузка курсов при загрузке страницы
             loadCourses();
 
-            // Функция для обновления списка потоков при выборе курса
+        
             $('#course-dropdown').change(function() {
                 var selectedCourse = $(this).val();
-                var selectedCourseId = $(this).children('option:selected').attr('id'); // Получаем идентификатор курса
+                var selectedCourseId = $(this).children('option:selected').attr('id'); 
                 $('#stream-dropdown').prop('disabled', true).empty();
                 $('#Instance-dropdown').prop('disabled', true).empty();
 
@@ -129,11 +128,10 @@
                 }
             });
 
-            // Функция для обновления списка тарифов при выборе потока
             $('#stream-dropdown').change(function() {
                 var selectedCourse = $('#course-dropdown').val();
                 var selectedStream = $(this).val();
-                var selectedStreamId = $(this).children('option:selected').attr('id'); // Получаем идентификатор курса
+                var selectedStreamId = $(this).children('option:selected').attr('id'); 
                 $('#Instance-dropdown').prop('disabled', true).empty();
 
                 if (selectedStream) {
@@ -249,37 +247,79 @@
 
 
 
-            function fillTableWithData(data) {
+            function fillTableWithData(table) {
+                var data = table.data;
+                var currencies = table.currencies;
+
+                var tableHeadRow = document.querySelector('#payments thead tr');
+
+                // Удалим все столбцы после 'Курс'
+                while (tableHeadRow.children.length > 2) {
+                    tableHeadRow.removeChild(tableHeadRow.lastChild);
+                }
+
+                for (var currency in currencies){
+                    var currencyCell = document.createElement('th');
+                    currencyCell.textContent = currencies[currency];
+                    tableHeadRow.appendChild(currencyCell);
+                }
+
                 var tableBody = document.querySelector('#payments tbody');
-                tableBody.innerHTML = ''; // Очистим таблицу перед заполнением новыми данными
-                
+
+                tableBody.innerHTML = '';
+
+
+
                 for (var month in data) {
                     if (data.hasOwnProperty(month)) {
                         if (Object.keys(data[month].courses).length === 0) {
                             // Если ключей нет, добавляем пустой курс
-                            data[month].courses['-'] = 0;
+                            data[month].courses['-'] = {};
+                            for (var currency in currencies){
+                                data[month].courses['-'][currency] = 0;
+                                
+
+                            }
+                            
                         }
+                        var prev_mounth ="";
                         for (var course in data[month].courses) {
                             if (data[month].courses.hasOwnProperty(course)) {
+
                                 var row = document.createElement('tr');
+
                                 var monthCell = document.createElement('td');
-                                var courseCell = document.createElement('td');
-                                var amountCell = document.createElement('td');
-                                
-                                monthCell.textContent = data[month].month;
-                                courseCell.textContent = course;
-                                amountCell.textContent = data[month].courses[course];
-                                
                                 row.appendChild(monthCell);
+                                monthCell.textContent = "";
+
+                                if(data[month].month != prev_mounth){
+
+                                    monthCell.textContent = data[month].month;
+
+                                }
+
+
+
+
+                                var courseCell = document.createElement('td');
                                 row.appendChild(courseCell);
-                                row.appendChild(amountCell);
-                                
+                                courseCell.textContent = course;
+
+                                for(var key in data[month].courses[course]) {
+                                    var amount = data[month].courses[course][key];
+                                    var amountCell = document.createElement('td');
+                                    amountCell.textContent = amount;
+                                    row.appendChild(amountCell);
+                                }
                                 tableBody.appendChild(row);
-                            } 
+
+                                prev_mounth = data[month].month
+                            }
                         }
                     }
                 }
             }
+
 
             function fetchDataAndFillTable() {
                 // Выполняем запрос к API
