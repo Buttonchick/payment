@@ -156,7 +156,7 @@
                 }
             });
 
-            // Функция для загрузки платежей при выборе курса, потока или тарифа
+
             function loadPayments() {
                 var selectedCourse = $('#course-dropdown').val();
                 var selectedStream = $('#stream-dropdown').val();
@@ -165,7 +165,6 @@
                 var selectedDataFrom = $('#date-from').val();
                 var selectedDataTo = $('#date-to').val();
 
-                // формируем URL 
                 var url = '/api/get_filtered_payments/?';
                 if (selectedCourse) {
                     url += 'course=' + selectedCourse + '&';
@@ -192,12 +191,7 @@
                         $('#usd-total').text(data['usd_total']);
                         $('#eur-total').text(data['eur_total']);
                         $('#ils-total').text(data['ils_total']);
-                        var paymentsTable = $('#payments tbody');
-                        paymentsTable.empty();
 
-                        $.each(data.data, function(index, payment) {
-                            paymentsTable.append('<tr><td>' + payment.course + '</td><td>' + payment.time + '</td><td>' + payment.payed + '</td><td>' + payment.amount + '</td></tr>');
-                        });
                         var totals = $('#totals');
                         totals.empty();
 

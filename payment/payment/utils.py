@@ -105,7 +105,13 @@ def convert_price(amount, from_currency, to_currency):
 
     return 0
 
+
+
 def fill_data(request):
+
+    course_name, stream_name, instance_name, currency, data_from, data_to = get_request_params(request)
+    course, stream, instance = get_course_objects(course_name, stream_name, instance_name)
+
     filtered_payments = Payment.objects.filter(payed=True) 
     currencies = list(Payment.objects.filter(payed=True).values_list('payed_currency', flat=True).distinct())
     currencies.append('Amount USD')
