@@ -10,55 +10,55 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
 </head>
 <body>
-    <div class="easyui-layout" style="width:100%;height:800px;">
-        <div data-options="region:'north', split:true" style="height:50%">
+    <div class="easyui-layout">
+        <div data-options="region:'north', split:true">
             <div class="container">
-                <div class="row" style="padding-left: 12px;">
+                <div class="row" >
                     <div class="col-md-6">
-                        <p>Курс:
+                        <span class="select-container" style="display: flex; justify-content: space-between;align-items: center;">
+                            <p style="width: 92px;">Курс:</p>
                             <select id="course-dropdown" class="form-select">
                                 <option value="">Выберите курс</option>    
                             </select>
-                        </p>
-                        <p>Поток:
+                        </span>
+
+                        <span class="select-container" style="display: flex; justify-content: space-between;">
+                            <p style="width: 92px;">Поток:</p>
                             <select id="stream-dropdown" class="form-select" disabled>
                                 <option value="">Выберите поток</option>
                             </select>
-                        </p>
-                        <p>Тариф:
+                        </span>
+                        <span class="select-container" style="display: flex; justify-content: space-between;">
+                            <p style="width: 92px;">Тариф: </p>
                             <select id="Instance-dropdown" class="form-select" disabled>
                                 <option value="">Выберите тариф</option>
                             </select>
-                        </p>
-                        <div style="position: relative; display: flex; width: fit-content;">
-                            <p style="padding-right: 10px;">Платежи: </p>
-                            <input type="text" id="date-from" name="date-from" class="form-control" style="border-radius: 5px; margin-right: 5px;">
-                            <input type="text" id="date-to" name="date-to" class="form-control" style="border-radius: 5px;">
-                        </div>
-                        <button id="refresh-btn" class="btn btn-primary">Обновить</button>
+                        </span>
+                        <span class="select-container" style="display: flex; justify-content: space-between;">
+                            <p style="width: 92px;">Платежи: </p>
+                            <input type="text" id="date-from" name="date-from" class="form-control">
+                            <input type="text" id="date-to" name="date-to" class="form-control" >
+                        </span>
+                        <button id="refresh-btn" class="button">Обновить</button>
                     </div>
                     <div class="col-md-6">
                         <div id="totals">
-                            <p>RUB:<span>0</span></p>
-                            <p>USD:<span>0</span></p>
-                            <p>EUR:<span>0</span></p>
-                            <p>ILS:<span>0</span></p>
+
                         </div>
-                        <div style="display: flex;">
-                            <select id="currency-dropdown" class="form-select" style="margin-right: 10px;">
-                                <option value="RUB">RUB</option>
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="ILS">ILS</option>
+                        <div style="display: flex; align-items: center;">
+                            <div id="total-amount" style="margin-right: 12px;">Всего:</div>
+                            <select id="currency-dropdown" class="form-select" >
+                                <option>USD</option>
+
                             </select>
-                            <div id="total-amount" class="form-control">0</div>
+                            
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div data-options="region:'center'" style="height:50%">
-            <table id="payments" class="table" style="width:100%;height:100%">
+        <div data-options="region:'center'" >
+            <table id="payments" class="table" >
                 <thead>
                     <tr>
                         <th>Месяц</th>
@@ -71,6 +71,126 @@
             </table>
         </div>
     </div>
+    <style>
+        #payments tbody {
+            display: block;
+            height: 400px; 
+            overflow-y: auto;
+        }
+        #payments thead,
+        #payments tbody tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        #currency-dropdown {
+            width: fit-content;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 90%;
+            padding: 24pt;
+            margin: auto;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: #444;
+        }
+
+        p {
+            line-height: 1.6;
+        }
+
+        button {
+            background-color: white;
+            border: 2px solid #4CAF50;
+            color: #4CAF50;
+            border-radius: 1rem;
+            padding: 8px 24px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 76px;
+            transition-duration: 0.4s;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: white;
+            color: #4caf4f86;
+            border: 2px solid #4caf4f86;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 20px;
+            margin:  12px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-control {
+            width: 50%;
+            padding: 12px 20px;
+            margin:  12px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+
+        }
+
+        #totals {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        #totals p {
+            margin: 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .easyui-layout {
+            margin:24px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+    </style>
     
 
     <script>
@@ -207,21 +327,30 @@
 
                         var total_amount = $('#total-amount');
                         total_amount.empty();
+
+                        var isFirst = true;
                         $.each(data.total_amounts, function(index, amount) {
 
-                                total_amount.append('<span id="' + index + '" style="display: none;">' + ' ' + amount + ' ' + '</span>');
-                            
+                            if(isFirst){
+                                total_amount.append('<span id="' + index + '" style="display: block;">' +'Всего:'+ ' ' + amount + ' ' + '</span>');
+                                isFirst = false;
+
+                            }else{
+                                total_amount.append('<span id="' + index + '" style="display: none;">' +'Всего:'+ ' ' + amount + ' ' + '</span>');
+
+                            }
+
                         
                         });
-
                         
-
                       
 
                     },
                     error: function(error) {
                         console.log(error);
                     }
+
+
                 });
             }
 
@@ -270,7 +399,7 @@
                             // Если ключей нет, добавляем пустой курс
                             data[month].courses['-'] = {};
                             for (var currency in currencies){
-                                data[month].courses['-'][currency] = 0;
+                                data[month].courses['-'][currency] = "-";
                                 
 
                             }
