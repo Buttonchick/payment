@@ -20,20 +20,21 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 from .views import CourseViewSet, CourseStreamViewSet, CourseInstanceViewSet,PaymentViewSet, payments_view
-from .utils import get_filtered_payments,fill_data
+from .utils import get_ui, get_table_headers,fill_data
 
 router = routers.DefaultRouter()
 router.register(r'courses', CourseViewSet)
 router.register(r'coursestreams', CourseStreamViewSet)
 router.register(r'courseinstances', CourseInstanceViewSet)
-router.register(r'payments', PaymentViewSet)  # Используйте PaymentViewSet здесь
+router.register(r'payments', PaymentViewSet) 
 
 urlpatterns = [
     path('payments/', payments_view, name="payments"),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('api/get_filtered_payments/', get_filtered_payments, name='get_filtered_payments'),
-    path('api/fill_data/', fill_data, name='fill_data'),
-  
+    path('api/get_ui/', get_ui, name='get_ui'),
+    path('api/get_table_headers/', get_table_headers, name='get_table_headers'),
+    path('api/fill_data/', fill_data, name='fill_data')
+
  
 ]

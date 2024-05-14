@@ -1,468 +1,221 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Страница Платежей</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://www.jeasyui.com/easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="https://www.jeasyui.com/easyui/themes/icon.css">
+    <script type="text/javascript" src="https://www.jeasyui.com/easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="https://www.jeasyui.com/easyui/jquery.easyui.min.js"></script>
 </head>
 <body>
-    <div class="easyui-layout">
-        <div data-options="region:'north', split:true">
-            <div class="container">
-                <div class="row" >
-                    <div class="col-md-6">
-                        <span class="select-container" style="display: flex; justify-content: space-between;align-items: center;">
-                            <p style="width: 92px;">Курс:</p>
-                            <select id="course-dropdown" class="form-select">
-                                <option value="">Выберите курс</option>    
-                            </select>
-                        </span>
+    <div class="easyui-layout" data-options="fit:true">
+        <div data-options="region:'north',split:true" style="height:300px;display:flex;">
+            <div  style="padding:10px;width:50%">
+                <div style="margin-bottom:10px;">
+                    <span>Курс:</span>
+                    <input id="course-dropdown" class="easyui-combobox" data-options="{
+                        valueField: 'id',
+                        textField: 'name',
+                        onChange: function(value){ 
+                            if(value){
+                                $('#stream-dropdown').combobox('clear');
+                                $('#instance-dropdown').combobox('clear');
+                                $('#date-from').datebox('clear');
+                                $('#date-to').datebox('clear');
+                                $('#currency-dropdown').combobox('clear');
+                                updateUi(); 
+                            }
+                        }
+                    }">
+                </div>
+                <div style="margin-bottom:10px;">
+                    <span>Поток:</span>
+                    <input id="stream-dropdown" class="easyui-combobox" data-options="{
+                        valueField: 'id',
+                        textField: 'name',
+                        onChange: function(value){ 
+                            if(value){
+                                $('#instance-dropdown').combobox('clear');
+                                $('#date-from').datebox('clear');
+                                $('#date-to').datebox('clear');
+                                $('#currency-dropdown').combobox('clear');
+                                updateUi(); 
+                            }
+                        }
+                    }">
+                </div>
+                <div style="margin-bottom:10px;">
+                    <span>Тариф:</span>
+                    <input id="instance-dropdown" class="easyui-combobox" data-options="{
+                        valueField: 'id',
+                        textField: 'name',
+                        onChange: function(value){ 
+                            if(value){
+                                $('#date-from').datebox('clear');
+                                $('#date-to').datebox('clear');
+                                $('#currency-dropdown').combobox('clear');
+                                updateUi(); 
+                            }
+                        }
+                    }">
+                </div>
+                <div style="margin-bottom:10px;">
+                    <span>Период:</span>
+                    <input id="date-from" class="easyui-datebox" data-options="formatter:formatDate,parser:parseDate">
+                    <input id="date-to" class="easyui-datebox" data-options="formatter:formatDate,parser:parseDate">
+                </div>
+                <div>
+                    <a id="refresh-btn" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-reload'" onclick="updateUi()">Обновить</a>
+                </div>
+            </div>
+            <div style="padding:10px;">
 
-                        <span class="select-container" style="display: flex; justify-content: space-between;">
-                            <p style="width: 92px;">Поток:</p>
-                            <select id="stream-dropdown" class="form-select" disabled>
-                                <option value="">Выберите поток</option>
-                            </select>
-                        </span>
-                        <span class="select-container" style="display: flex; justify-content: space-between;">
-                            <p style="width: 92px;">Тариф: </p>
-                            <select id="Instance-dropdown" class="form-select" disabled>
-                                <option value="">Выберите тариф</option>
-                            </select>
-                        </span>
-                        <span class="select-container" style="display: flex; justify-content: space-between;">
-                            <p style="width: 92px;">Платежи: </p>
-                            <input type="text" id="date-from" name="date-from" class="form-control">
-                            <input type="text" id="date-to" name="date-to" class="form-control" >
-                        </span>
-                        <button id="refresh-btn" class="button">Обновить</button>
-                    </div>
-                    <div class="col-md-6">
-                        <div id="totals">
-
-                        </div>
-                        <div style="display: flex; align-items: center;">
-                            <div id="total-amount" style="margin-right: 12px;">Всего:</div>
-                            <select id="currency-dropdown" class="form-select" >
-                                <option>USD</option>
-
-                            </select>
-                            
-                        </div>
-                    </div>
+                <div id="totals" style="margin-top:10px;"></div>
+                <div style="margin-top:10px;">
+                    <span>Всего:</span>
+                    <span id="total-amount"></span>
+                    <input id="currency-dropdown" class="easyui-combobox" data-options="{
+                        valueField: 'id',
+                        textField: 'name',
+                        onChange: function(value) {
+                            $('#total-amount').text(value);
+                        }
+                    }">
                 </div>
             </div>
         </div>
-        <div data-options="region:'center'" >
-            <table id="payments" class="table" >
-                <thead>
-                    <tr>
-                        <th>Месяц</th>
-                        <th>Курс</th>
-                        <th>Сумма оплаты (USD)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
+        <div data-options="region:'center'">
+            <table id="payments" class="easyui-datagrid" data-options="fitColumns:true, singleSelect:true, rownumbers:true, sortName:'course', sortOrder:'asc'">
+
         </div>
     </div>
-    <style>
-        #payments tbody {
-            display: block;
-            height: 400px; 
-            overflow-y: auto;
-        }
-        #payments thead,
-        #payments tbody tr {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
-        }
-
-        #currency-dropdown {
-            width: fit-content;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            color: #333;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            width: 90%;
-            padding: 24pt;
-            margin: auto;
-        }
-
-        h1, h2, h3, h4, h5, h6 {
-            color: #444;
-        }
-
-        p {
-            line-height: 1.6;
-        }
-
-        button {
-            background-color: white;
-            border: 2px solid #4CAF50;
-            color: #4CAF50;
-            border-radius: 1rem;
-            padding: 8px 24px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 76px;
-            transition-duration: 0.4s;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: white;
-            color: #4caf4f86;
-            border: 2px solid #4caf4f86;
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-
-        th {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        th, td {
-            text-align: left;
-            padding: 8px;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-
-        .form-select {
-            width: 100%;
-            padding: 12px 20px;
-            margin:  12px 0;
-            display: inline-block;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .form-control {
-            width: 50%;
-            padding: 12px 20px;
-            margin:  12px 0;
-            display: inline-block;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-
-        }
-
-        #totals {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        #totals p {
-            margin: 0;
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        .easyui-layout {
-            margin:24px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-    </style>
-    
 
     <script>
         $(document).ready(function() {
-
-            $('#date-from, #date-to').datetimepicker({
-                locale: 'ru' 
-            });
-
-            function loadCourses() {
-                $.ajax({
-                    url: '/api/courses/',
-                    type: 'GET',
-                    success: function(data) {
-                        var courseDropdown = $('#course-dropdown');
-                        $.each(data, function(index, course) {
-                            if (course.visibility === 2) {
-                                courseDropdown.append('<option value="' + course.name + '"  id="' + course.id + '">' + course.name + '</option>');
-                            }
-                        });
-                    },
-                    error: function(error) {
-                        console.log(error);
-                    }
-                });
-            }
-
-            loadCourses();
-
-        
-            $('#course-dropdown').change(function() {
-                var selectedCourse = $(this).val();
-                var selectedCourseId = $(this).children('option:selected').attr('id'); 
-                $('#stream-dropdown').prop('disabled', true).empty();
-                $('#Instance-dropdown').prop('disabled', true).empty();
-
-                if (selectedCourse) {
-                    $.ajax({
-                        url: '/api/coursestreams/?course=' + selectedCourse,
-                        type: 'GET',
-                        success: function(data) {
-                            var streamDropdown = $('#stream-dropdown');
-                            streamDropdown.prop('disabled', false);
-                            $.each(data, function(index, stream) {
-                                if(stream.course == selectedCourseId ){
-                                    streamDropdown.append('<option value="' + stream.name + '" id="' + stream.id + '">' + stream.name+'</option>');
-                                }
-                                
-                            });
-                        },
-                        error: function(error) {
-                            console.log(error);
-                        }
-                    });
-                }
-            });
-
-            $('#stream-dropdown').change(function() {
-                var selectedCourse = $('#course-dropdown').val();
-                var selectedStream = $(this).val();
-                var selectedStreamId = $(this).children('option:selected').attr('id'); 
-                $('#Instance-dropdown').prop('disabled', true).empty();
-
-                if (selectedStream) {
-                    $.ajax({
-                        url: '/api/courseinstances/?course=' + selectedCourse + '&stream=' + selectedStream,
-                        type: 'GET',
-                        success: function(data) {
-                            var instanceDropdown = $('#Instance-dropdown');
-                            instanceDropdown.prop('disabled', false);
-                            $.each(data, function(index, instance) {
-                                if(instance.stream == selectedStreamId){
-                                    instanceDropdown.append('<option value="' + instance.name + '">' + instance.name + '</option>');
-
-                                }
-                                
-                            });
-                        },
-                        error: function(error) {
-                            console.log(error);
-                        }
-                    });
-                }
-            });
-
-
-            function loadPayments() {
-                var selectedCourse = $('#course-dropdown').val();
-                var selectedStream = $('#stream-dropdown').val();
-                var selectedInstance = $('#Instance-dropdown').val();
-                var selectedCurrency = $('#currency-dropdown').val();
-                var selectedDataFrom = $('#date-from').val();
-                var selectedDataTo = $('#date-to').val();
-
-                var url = '/api/get_filtered_payments/?';
-                if (selectedCourse) {
-                    url += 'course=' + selectedCourse + '&';
-                }
-                if (selectedStream) {
-                    url += 'stream=' + selectedStream + '&';
-                }
-                if (selectedInstance) {
-                    url += 'instance=' + selectedInstance + '&';
-                }
-                if (selectedDataFrom) {
-                    url += 'data_from=' + selectedDataFrom+ '&';
-                }
-                if (selectedDataTo) {
-                    url += 'data_to=' + selectedDataTo+ '&';
-                }
-
-                $.ajax({
-                    url: url,
-                    type: 'GET',
-                    success: function(data) {
-
-                        $('#rub-total').text(data['rub_total']);
-                        $('#usd-total').text(data['usd_total']);
-                        $('#eur-total').text(data['eur_total']);
-                        $('#ils-total').text(data['ils_total']);
-
-                        var totals = $('#totals');
-                        totals.empty();
-
-                        var currency_dropdown = $('#currency-dropdown')
-                        currency_dropdown.empty();
-
-                        $.each(data.amounts, function(index, amount) {
-                       
-                            totals.append('<p>' + index+ ': <span id="' + amount+ '-total">' + amount + '</span></p>');
-                            currency_dropdown.append('<option value="'+index+'">'+index+'</option>')
-                           
-                        });
-
-                        var total_amount = $('#total-amount');
-                        total_amount.empty();
-
-                        var isFirst = true;
-                        $.each(data.total_amounts, function(index, amount) {
-
-                            if(isFirst){
-                                total_amount.append('<span id="' + index + '" style="display: block;">' +'Всего:'+ ' ' + amount + ' ' + '</span>');
-                                isFirst = false;
-
-                            }else{
-                                total_amount.append('<span id="' + index + '" style="display: none;">' +'Всего:'+ ' ' + amount + ' ' + '</span>');
-
-                            }
-
-                        
-                        });
-                        
-                      
-
-                    },
-                    error: function(error) {
-                        console.log(error);
-                    }
-
-
-                });
-            }
-
-            function total_amount(){
-                var total_amount_elements = Array.from(document.querySelectorAll('#total-amount span'));
-                var selectedCurrency = $('#currency-dropdown').val();
-                total_amount_elements.forEach(element => {
-                    if (element.id === selectedCurrency){
-                        element.style.display = 'block';
-                    } else {
-                        element.style.display = 'none';
-                    }
-                });
-            }
-
-
-
-
-
-            function fillTableWithData(table) {
-                var data = table.data;
-                var currencies = table.currencies;
-
-                var tableHeadRow = document.querySelector('#payments thead tr');
-
-                // Удалим все столбцы после 'Курс'
-                while (tableHeadRow.children.length > 2) {
-                    tableHeadRow.removeChild(tableHeadRow.lastChild);
-                }
-
-                for (var currency in currencies){
-                    var currencyCell = document.createElement('th');
-                    currencyCell.textContent = currencies[currency];
-                    tableHeadRow.appendChild(currencyCell);
-                }
-
-                var tableBody = document.querySelector('#payments tbody');
-
-                tableBody.innerHTML = '';
-
-
-
-                for (var month in data) {
-                    if (data.hasOwnProperty(month)) {
-                        if (Object.keys(data[month].courses).length === 0) {
-                            // Если ключей нет, добавляем пустой курс
-                            data[month].courses['-'] = {};
-                            for (var currency in currencies){
-                                data[month].courses['-'][currency] = "-";
-                                
-
-                            }
-                            
-                        }
-                        var prev_mounth ="";
-                        for (var course in data[month].courses) {
-                            if (data[month].courses.hasOwnProperty(course)) {
-
-                                var row = document.createElement('tr');
-
-                                var monthCell = document.createElement('td');
-                                row.appendChild(monthCell);
-                                monthCell.textContent = "";
-
-                                if(data[month].month != prev_mounth){
-
-                                    monthCell.textContent = data[month].month;
-
-                                }
-
-
-
-
-                                var courseCell = document.createElement('td');
-                                row.appendChild(courseCell);
-                                courseCell.textContent = course;
-
-                                for(var key in data[month].courses[course]) {
-                                    var amount = data[month].courses[course][key];
-                                    var amountCell = document.createElement('td');
-                                    amountCell.textContent = amount;
-                                    row.appendChild(amountCell);
-                                }
-                                tableBody.appendChild(row);
-
-                                prev_mounth = data[month].month
-                            }
-                        }
-                    }
-                }
-            }
-
-
-            function fetchDataAndFillTable() {
-                // Выполняем запрос к API
-                fetch('/api/fill_data/')
-                    .then(response => response.json())
-                    .then(data => {
-                        fillTableWithData(data);
-                    })
-                    .catch(error => console.error('Ошибка при получении данных:', error));
-            }
-
-
-            // Обновляем платежи при нажатии на кнопку "Обновить"
-            $('#currency-dropdown').change(total_amount);
-            $('#refresh-btn').click(loadPayments);
-            fetchDataAndFillTable();
+           
+            fillTableHeaders();
+            fillTableData();
+            updateUi();
         });
 
+        function formatDate(date) {
+            var y = date.getFullYear();
+            var m = date.getMonth() + 1;
+            var d = date.getDate();
+            return y + '-' + (m < 10 ? ('0' + m) : m) + '-' + (d < 10 ? ('0' + d) : d);
+        }
 
-        
+        function parseDate(str) {
+            var t = Date.parse(str);
+            if (!isNaN(t)) {
+                return new Date(t);
+            } else {
+                return new Date();
+            }
+        }
+
+        function updateUi() {
+            $.ajax({
+                url: '/api/get_ui/',
+                method: 'GET',
+                data: {
+                    course: $('#course-dropdown').combobox('getValue'),
+                    stream: $('#stream-dropdown').combobox('getValue'),
+                    instance: $('#instance-dropdown').combobox('getValue'),
+                    date_from: $('#date-from').datebox('getValue'),
+                    date_to: $('#date-to').datebox('getValue'),
+                    currency: $('#currency-dropdown').combobox('getValue')
+                },
+                success: function(data) {
+                    var course_dropdown = data.course_dropdown;
+                    var stream_dropdown = data.stream_dropdown;
+                    var instance_dropdown = data.instance_dropdown;
+                    var date_from = data.date_from_field;
+                    var date_to = data.date_to_field;
+                    var currency_dropdown = data.currency_dropdown;
+                    var amounts = data.amounts;
+
+                    $('#course-dropdown').combobox('loadData', course_dropdown);
+                    $('#stream-dropdown').combobox('loadData', stream_dropdown);
+                    $('#instance-dropdown').combobox('loadData', instance_dropdown);
+                    $('#date-from').datebox('setValue', date_from);
+                    $('#date-to').datebox('setValue', date_to);
+                    $('#currency-dropdown').combobox('loadData', currency_dropdown);
+                    $('#currency-dropdown').combobox('setValue', currency_dropdown[0]);
+
+             
+                        
+
+                    var totals = $('#totals');
+                    totals.empty();
+
+                    $.each(amounts, function(index, amount) {
+                        totals.append('<p>' + index + ': <span id="' + amount + '-total">' + amount + '</span></p>');
+                    });
+                }
+            });
+        }
+        function fillTableHeaders() {
+            $.ajax({
+                url: '/api/get_table_headers/',
+                method: 'GET',
+                success: function(data) {
+
+                    var headers = data.headers;
+                    console.log(headers)
+                    var columns = [];
+                    $.each(headers, function(index, header) {
+                        columns.push({field: header.id, title: header.name});
+                    });
+                    $('#payments').datagrid({
+                        columns: [columns]
+                    });
+                }
+            });
+        }
+
+
+        function fillTableData() {
+            $.ajax({
+                url: '/api/fill_data/',
+                method: 'GET',
+                success: function(tableData) {
+                    $('#payments').datagrid('loadData', tableData);
+                    
+                }
+            });
+        }
+
+        $('#payments').datagrid({
+            onLoadSuccess: function(data) {
+                var rows = data.rows;
+                var currentMonth = rows[0].month; // предположим, что у вас есть поле "month"
+                var startIndex = 0;
+                var endIndex = 0;
+
+                for (var i = 1; i < rows.length; i++) {
+                    if (rows[i].month !== currentMonth) {
+                        endIndex = i - 1;
+                        $(this).datagrid('mergeCells', {
+                            index: startIndex,
+                            field: 'month',  // замените 'month' на имя вашего поля с месяцем
+                            rowspan: endIndex - startIndex + 1
+                        });
+
+                        startIndex = i;
+                        currentMonth = rows[i].month;
+                    }
+                }
+
+                $(this).datagrid('mergeCells', {
+                    index: startIndex,
+                    field: 'month',  // замените 'month' на имя вашего поля с месяцем
+                    rowspan: rows.length - startIndex
+                });
+            }
+        });
+
     </script>
 </body>
 </html>
