@@ -118,7 +118,7 @@ def get_ui(request):
     return JsonResponse(data)
 
 def get_table_headers(request):
-    headers = [{'id':'month','name':'Месяц'},{'id':'course','name':'Курс'}]
+    headers = [{'id':'year','name':'Год'},{'id':'month','name':'Месяц'},{'id':'course','name':'Курс'}]
 
     currencies = list(Payment.objects.filter(payed=True).values_list('payed_currency', flat=True).distinct())
     for currency in currencies:

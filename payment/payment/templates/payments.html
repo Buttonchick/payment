@@ -86,10 +86,11 @@
             </div>
         </div>
         <div data-options="region:'center'">
-            <table id="payments" class="easyui-datagrid" data-options="fitColumns:true, singleSelect:true, rownumbers:true, sortName:'course', sortOrder:'asc'">
+            <table id="payments" class="easyui-datagrid" data-options="fitColumns:true,collapsible:true, singleSelect:true, remoteSort:false,multiSort:true">
 
         </div>
     </div>
+
 
     <script>
         $(document).ready(function() {
@@ -166,7 +167,7 @@
                     console.log(headers)
                     var columns = [];
                     $.each(headers, function(index, header) {
-                        columns.push({field: header.id, title: header.name});
+                        columns.push({field: header.id, title: header.name ,sortable:true, frozen: true});
                     });
                     $('#payments').datagrid({
                         columns: [columns]
@@ -177,12 +178,19 @@
 
 
         function fillTableData() {
+            $('#payments').datagrid({
+                height: 400, 
+                fitColumns: true,
+                scrollY: true,
+                autoRowHeight: false,
+                pagination: false
+            });
+
             $.ajax({
                 url: '/api/fill_data/',
                 method: 'GET',
                 success: function(tableData) {
                     $('#payments').datagrid('loadData', tableData);
-                    
                 }
             });
         }
@@ -190,31 +198,44 @@
         $('#payments').datagrid({
             onLoadSuccess: function(data) {
                 var rows = data.rows;
-                var currentMonth = rows[0].month; // предположим, что у вас есть поле "month"
+                var currentMonth = rows[0].month;
+                var currentYear = rows[0].year; 
                 var startIndex = 0;
                 var endIndex = 0;
 
                 for (var i = 1; i < rows.length; i++) {
-                    if (rows[i].month !== currentMonth) {
+                    if (rows[i].month !== currentMonth || rows[i].year !== currentYear) {
                         endIndex = i - 1;
                         $(this).datagrid('mergeCells', {
                             index: startIndex,
-                            field: 'month',  // замените 'month' на имя вашего поля с месяцем
+                            field: 'month',
+                            rowspan: endIndex - startIndex + 1
+                        });
+                        $(this).datagrid('mergeCells', {
+                            index: startIndex,
+                            field: 'year',
                             rowspan: endIndex - startIndex + 1
                         });
 
                         startIndex = i;
                         currentMonth = rows[i].month;
+                        currentYear = rows[i].year;
                     }
                 }
 
                 $(this).datagrid('mergeCells', {
                     index: startIndex,
-                    field: 'month',  // замените 'month' на имя вашего поля с месяцем
+                    field: 'month',
+                    rowspan: rows.length - startIndex
+                });
+                $(this).datagrid('mergeCells', {
+                    index: startIndex,
+                    field: 'year',
                     rowspan: rows.length - startIndex
                 });
             }
         });
+
 
     </script>
 </body>
